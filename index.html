@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Správa účtů</title>
+
+  <!-- Písma -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Styly -->
+  <style>
+/* ==========================================================
+   style.css – základní vzhled (tmavý motiv se zlatým akcentem)
+   ========================================================== */
+
+/* ---------- Proměnné (barvy, rádiusy) ---------- */
+:root {
+  --background: #0f0e0c;
+  --card: #1a1814;
+  --secondary: #26231d;
+  --border: #38342b;
+  --foreground: #f2ede2;
+  --muted: #9a9484;
+  --primary: #d4a94f;
+  --primary-fg: #1a1508;
+  --destructive: #e5584f;
+  --success: #34d399;
+  --radius: 10px;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---------- Rozvržení ---------- */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 512px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.section { margin-bottom: 20px; }
+.section-bordered { border-top: 1px solid var(--border); padding-top: 20px; margin-bottom: 0; }
+.section-bordered + .section-bordered { margin-top: 20px; }
+
+.stack > * + * { margin-top: 12px; }
+
+.label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.muted { color: var(--muted); }
+
+/* ---------- Formulářové prvky ---------- */
+.input {
+  width: 100%;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font: inherit;
+  color: var(--foreground);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input::placeholder { color: var(--muted); }
+.input:focus {
+  outline: none;
+  border-color: rgba(212, 169, 79, 0.5);
+  box-shadow: 0 0 0 1px rgba(212, 169, 79, 0.3);
+}
+.input:disabled { opacity: 0.5; }
+
+/* ---------- Tlačítka ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.15s, border-color 0.15s, background 0.15s, color 0.15s;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary { background: var(--primary); color: var(--primary-fg); }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+
+.btn-secondary { background: var(--secondary); border-color: var(--border); color: var(--foreground); }
+.btn-secondary:hover:not(:disabled) { border-color: rgba(212, 169, 79, 0.4); }
+
+.btn-ghost { width: auto; padding: 6px 12px; font-size: 12px; background: transparent; color: var(--muted); }
+.btn-ghost:hover:not(:disabled) { color: var(--foreground); background: var(--secondary); }
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.icon-btn svg { width: 14px; height: 14px; fill: currentColor; }
+.icon-btn.edit:hover { color: var(--primary); background: rgba(212, 169, 79, 0.1); }
+.icon-btn.delete:hover { color: var(--destructive); background: rgba(229, 88, 79, 0.1); }
+.icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Seznam účtů ---------- */
+.accounts { list-style: none; margin: 0; padding: 0; }
+.accounts > li + li { margin-top: 6px; }
+
+.account {
+  background: rgba(38, 35, 29, 0.4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+.account-row { display: flex; align-items: center; gap: 12px; }
+.account-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--secondary);
+  color: var(--muted);
+}
+.badge-admin { background: rgba(212, 169, 79, 0.15); color: var(--primary); }
+
+.edit-form {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(56, 52, 43, 0.6);
+}
+.edit-actions { display: flex; align-items: center; gap: 8px; }
+.edit-actions .btn-primary { flex: 1; padding: 8px 14px; font-size: 12px; }
+
+/* ---------- Zprávy ---------- */
+.msg { margin: 16px 0 0; font-size: 12px; }
+.msg-ok { color: var(--success); }
+.msg-error { color: var(--destructive); }
+
+/* ---------- Animace načítání ---------- */
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 1px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==========================================================
+   responsive.css – úpravy pro menší obrazovky
+   ========================================================== */
+
+@media (max-width: 560px) {
+  .shell { padding: 12px 8px; }
+
+  .card {
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+
+  .title { font-size: 24px; }
+
+  /* Větší dotykové plochy na mobilu */
+  .icon-btn { width: 36px; height: 36px; }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* Hlavička se může zalomit */
+  .card-head { flex-wrap: wrap; }
+}
+
+  </style>
+</head>
+<body>
+  <main class="shell">
+
+    <!-- ============ PŘIHLÁŠENÍ ============ -->
+    <section id="login-view" class="card" hidden>
+      <header class="card-head">
+        <div>
+          <h1 class="title">Přihlášení</h1>
+          <p class="subtitle">Přihlas se jako správce.</p>
+        </div>
+      </header>
+
+      <form id="login-form" class="stack" autocomplete="on">
+        <input name="username" type="text" required autocapitalize="none"
+               spellcheck="false" autocomplete="username"
+               placeholder="uživatelské jméno" class="input" />
+        <input name="password" type="password" required
+               autocomplete="current-password"
+               placeholder="heslo" class="input" />
+        <button type="submit" class="btn btn-primary" data-busy-label="Přihlašuji…">Přihlásit se</button>
+      </form>
+      <p id="login-error" class="msg msg-error" role="alert" hidden></p>
+    </section>
+
+    <!-- ============ SPRÁVA ÚČTŮ ============ -->
+    <section id="app-view" class="card" data-testid="accounts-panel" hidden>
+      <header class="card-head">
+        <div>
+          <h1 class="title">Účty</h1>
+          <p class="subtitle">Hosté se přihlašují uživatelským jménem a heslem.</p>
+        </div>
+        <button id="logout-btn" type="button" class="btn btn-ghost" title="Odhlásit se">Odhlásit</button>
+      </header>
+
+      <!-- Seznam účtů -->
+      <div class="section">
+        <p class="label">Existující účty</p>
+        <ul id="accounts-list" class="accounts"></ul>
+      </div>
+
+      <!-- Nový host -->
+      <form id="create-form" class="section section-bordered stack">
+        <p class="label">Nový host</p>
+        <input name="username" type="text" required autocapitalize="none" spellcheck="false"
+               placeholder="uživatelské jméno" data-testid="new-username" class="input" />
+        <input name="password" type="password" required minlength="8"
+               placeholder="heslo (min. 8 znaků)" data-testid="new-password" class="input" />
+        <button type="submit" class="btn btn-primary" data-testid="create-account"
+                data-busy-label="Vytvářím…">Vytvořit účet</button>
+      </form>
+
+      <!-- Změna vlastního hesla -->
+      <form id="password-form" class="section section-bordered stack">
+        <p class="label">Změna mého hesla</p>
+        <input name="currentPassword" type="password" required
+               placeholder="současné heslo" data-testid="current-password" class="input" />
+        <input name="newPassword" type="password" required minlength="8"
+               placeholder="nové heslo (min. 8 znaků)" data-testid="new-own-password" class="input" />
+        <button type="submit" class="btn btn-secondary" data-testid="change-password"
+                data-busy-label="Ukládám…">Změnit heslo</button>
+      </form>
+
+      <!-- Zprávy -->
+      <p id="notice" class="msg msg-ok" data-testid="accounts-notice" hidden></p>
+      <p id="error" class="msg msg-error" data-testid="accounts-error" role="alert" hidden></p>
+    </section>
+
+  </main>
+
+  <!-- Skripty (ES moduly) -->
+  <script type="module">
+/* Knihovna Convex se načítá s ochranou – při selhání stránka ukáže chybu místo prázdné obrazovky. */
+let ConvexClient = null;
+let libraryError = null;
+try {
+  ({ ConvexClient } = await import("https://esm.sh/convex/browser"));
+} catch (error) {
+  libraryError = error;
+}
+/* ===== config.js ===== */
+/**
+ * config.js – nastavení aplikace.
+ * JEDINÁ věc, kterou je potřeba upravit: CONVEX_URL.
+ */
+
+// URL tvého Convex nasazení (najdeš v Convex dashboardu → Settings → URL & Deploy Key).
+// Vypadá takto: https://neco-1234.convex.cloud
+const CONVEX_URL = "https://TVOJE-NASAZENI.convex.cloud";
+
+// Interní doména, na kterou backend mapuje uživatelská jména (musí být stejná jako v accounts.ts).
+const USERNAME_DOMAIN = "vault.local";
+
+// Názvy funkcí na Convex backendu.
+const FN = {
+  // Convex Auth (export z auth.ts)
+  signIn: "auth:signIn",
+  signOut: "auth:signOut",
+  // accounts.ts
+  listAccounts: "accounts:listAccounts",
+  createGuest: "accounts:createGuest",
+  updateAccount: "accounts:updateAccount",
+  deleteAccount: "accounts:deleteAccount",
+  changeMyPassword: "accounts:changeMyPassword",
+};
+
+// Klíč v localStorage pro uložení přihlášení.
+const STORAGE_KEY = "vault.auth.tokens";
+
+// Pravidla – stejná jako na backendu.
+const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])$/;
+const MIN_PASSWORD_LENGTH = 8;
+
+/* ===== helpers.js ===== */
+/**
+ * helpers.js – drobné pomocné funkce (bez závislosti na DOM struktuře).
+ */
+
+/** Krátká zkratka pro document.querySelector. */
+const $ = (selector, root = document) => root.querySelector(selector);
+
+/** Uživatelské jméno do malých písmen bez mezer (stejně jako na backendu). */
+function normalizeUsername(raw) {
+  return String(raw ?? "").trim().toLowerCase();
+}
+
+/** Uživatelské jméno → interní e-mail, pod kterým je účet uložen. */
+function usernameToEmail(username) {
+  return `${username}@${USERNAME_DOMAIN}`;
+}
+
+/** Ochrana proti vložení HTML (XSS) při vykreslování textu. */
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Převede chybu z Convexu na srozumitelnou českou hlášku. */
+function describeError(caught) {
+  // ConvexError nese kód v poli "data" (kontrola bez instanceof – knihovna je načtená z CDN).
+  const code = caught && typeof caught.data === "string" ? caught.data : null;
+
+  const messages = {
+    USERNAME_INVALID:
+      "Uživatelské jméno musí mít 3–32 znaků: malá písmena, číslice, tečka, pomlčka nebo podtržítko.",
+    PASSWORD_TOO_SHORT: "Heslo musí mít alespoň 8 znaků.",
+    USERNAME_TAKEN: "Toto uživatelské jméno už existuje.",
+    CANNOT_DELETE_SELF: "Vlastní účet smazat nelze.",
+    CANNOT_DELETE_ADMIN: "Účet správce smazat nelze.",
+    ACCOUNT_NOT_FOUND: "Účet už neexistuje.",
+    NO_PASSWORD_ACCOUNT: "Tento účet nemá heslo, nejde ho tak změnit.",
+    WRONG_PASSWORD: "Současné heslo není správné.",
+  };
+
+  return messages[code] ?? "Akce se nepovedla. Zkus to znovu.";
+}
+
+/* ===== api.js ===== */
+/**
+ * api.js – komunikace s Convex backendem (přihlášení + volání funkcí).
+ *
+ * Používá oficiální Convex klient načtený z CDN (esm.sh), takže není potřeba žádný build.
+ */
+
+const client = ConvexClient && !CONVEX_URL.includes("TVOJE-NASAZENI") ? new ConvexClient(CONVEX_URL) : null;
+
+/* ---------- Uložení tokenů ---------- */
+let tokens = loadTokens();
+
+function loadTokens() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function saveTokens(next) {
+  tokens = next;
+  try {
+    if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    else localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* localStorage nemusí být dostupné (privátní režim) – přihlášení pak platí jen do obnovení stránky */
+  }
+}
+
+/* ---------- Autentizace klienta ---------- */
+let authChangeCallback = () => {};
+
+/** Convex si přes tuto funkci říká o aktuální token (a o nový, když ten starý vyprší). */
+async function fetchAccessToken({ forceRefreshToken }) {
+  if (forceRefreshToken && tokens?.refreshToken) {
+    try {
+      const result = await client.action(FN.signIn, { refreshToken: tokens.refreshToken });
+      saveTokens(result?.tokens ?? null);
+    } catch {
+      saveTokens(null);
+    }
+  }
+  return tokens?.token ?? null;
+}
+
+function applyAuth() {
+  client.setAuth(fetchAccessToken, (isAuthenticated) => authChangeCallback(isAuthenticated));
+}
+
+/** Zaregistruje callback, který se zavolá při změně stavu přihlášení. */
+function onAuthChange(callback) {
+  authChangeCallback = callback;
+}
+
+/** Je uložený token (uživatel byl přihlášený)? */
+function hasSession() {
+  return Boolean(tokens?.token);
+}
+
+/** Zapne autentizaci klienta s uloženými tokeny (volat jednou při startu). */
+function initAuth() {
+  applyAuth();
+}
+
+/** Přihlášení uživatelským jménem a heslem. */
+async function signIn(username, password) {
+  const result = await client.action(FN.signIn, {
+    provider: "password",
+    params: { email: usernameToEmail(username), password, flow: "signIn" },
+  });
+  if (!result?.tokens) throw new Error("SIGNIN_FAILED");
+  saveTokens(result.tokens);
+  applyAuth();
+}
+
+/** Odhlášení. */
+async function signOut() {
+  try {
+    await client.action(FN.signOut, {});
+  } catch {
+    /* i když server selže, lokální přihlášení smažeme */
+  }
+  saveTokens(null);
+  applyAuth();
+}
+
+/* ---------- Funkce backendu ---------- */
+
+/** Živý odběr seznamu účtů. Vrací funkci pro zrušení odběru. */
+function watchAccounts(onData, onError) {
+  return client.onUpdate(FN.listAccounts, {}, onData, onError);
+}
+
+const createGuest = (username, password) =>
+  client.action(FN.createGuest, { username, password });
+
+const updateAccount = (userId, changes) =>
+  client.action(FN.updateAccount, { userId, ...changes });
+
+const deleteAccount = (userId) => client.action(FN.deleteAccount, { userId });
+
+const changeMyPassword = (currentPassword, newPassword) =>
+  client.action(FN.changeMyPassword, { currentPassword, newPassword });
+
+/* Souhrn funkcí z api.js (ve verzi do jednoho souboru nahrazuje import) */
+const api = {
+  initAuth, hasSession, signIn, signOut, onAuthChange,
+  watchAccounts, createGuest, updateAccount, deleteAccount, changeMyPassword,
+};
+
+/* ===== main.js ===== */
+/**
+ * main.js – logika uživatelského rozhraní (přihlášení + správa účtů).
+ */
+
+/* ---------- Prvky stránky ---------- */
+const el = {
+  loginView: $("#login-view"),
+  loginForm: $("#login-form"),
+  loginError: $("#login-error"),
+  appView: $("#app-view"),
+  logoutBtn: $("#logout-btn"),
+  list: $("#accounts-list"),
+  createForm: $("#create-form"),
+  passwordForm: $("#password-form"),
+  notice: $("#notice"),
+  error: $("#error"),
+};
+
+/* ---------- Stav aplikace ---------- */
+const state = {
+  accounts: null,   // null = načítá se
+  editingId: null,  // ID účtu, který se právě upravuje
+  deletingId: null, // ID účtu, který se právě maže
+  busy: false,
+  unsubscribe: null,
+};
+
+/* ---------- SVG ikony ---------- */
+const ICON_EDIT =
+  '<svg viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293z"/></svg>';
+const ICON_DELETE =
+  '<svg viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4z"/></svg>';
+
+/* ==========================================================
+   Pomocné funkce pro zprávy a stav "zaneprázdněno"
+   ========================================================== */
+function clearMessages() {
+  el.notice.hidden = true;
+  el.error.hidden = true;
+}
+
+function showNotice(text) {
+  clearMessages();
+  el.notice.textContent = text;
+  el.notice.hidden = false;
+}
+
+function showError(text) {
+  clearMessages();
+  el.error.textContent = text;
+  el.error.hidden = false;
+}
+
+/** Zapne/vypne všechna tlačítka a pole ve formulářích a přepíše text tlačítka. */
+function setBusy(form, busy) {
+  state.busy = busy;
+  form.querySelectorAll("input, button").forEach((node) => (node.disabled = busy));
+  const submit = form.querySelector('button[type="submit"]');
+  if (submit) {
+    if (busy) {
+      submit.dataset.label = submit.textContent;
+      submit.textContent = submit.dataset.busyLabel ?? "Pracuji…";
+    } else if (submit.dataset.label) {
+      submit.textContent = submit.dataset.label;
+    }
+  }
+}
+
+/* ==========================================================
+   Přepínání mezi přihlášením a správou účtů
+   ========================================================== */
+function showLogin() {
+  stopWatching();
+  el.appView.hidden = true;
+  el.loginView.hidden = false;
+}
+
+function showApp() {
+  el.loginView.hidden = true;
+  el.appView.hidden = false;
+  startWatching();
+}
+
+function startWatching() {
+  stopWatching();
+  state.accounts = null;
+  renderAccounts();
+  state.unsubscribe = api.watchAccounts(
+    (accounts) => {
+      state.accounts = accounts;
+      renderAccounts();
+    },
+    () => {
+      // Dotaz selhal – typicky chybí oprávnění správce nebo vypršelo přihlášení.
+      state.accounts = [];
+      renderAccounts();
+      showError("Nemáš oprávnění správce, nebo vypršelo přihlášení. Zkus se odhlásit a přihlásit znovu.");
+    },
+  );
+}
+
+function stopWatching() {
+  if (state.unsubscribe) state.unsubscribe();
+  state.unsubscribe = null;
+}
+
+/* ==========================================================
+   Vykreslení seznamu účtů
+   ========================================================== */
+function accountTemplate(account) {
+  const name = escapeHtml(account.username ?? "");
+  const isEditing = state.editingId === account.id;
+  const isDeleting = state.deletingId === account.id;
+
+  const deleteButton = account.isAdmin
+    ? ""
+    : `<button type="button" class="icon-btn delete" data-action="delete"
+         data-testid="account-delete" title="Smazat účet" ${isDeleting ? "disabled" : ""}>
+         ${isDeleting ? '<span class="spinner"></span>' : ICON_DELETE}
+       </button>`;
+
+  const editForm = isEditing
+    ? `<form class="edit-form stack" data-form="edit" data-testid="account-edit-form">
+         <input name="username" type="text" value="${name}" autocapitalize="none"
+                spellcheck="false" placeholder="nové uživatelské jméno" class="input" />
+         <input name="password" type="password" autocomplete="new-password"
+                placeholder="nové heslo (nech prázdné pro zachování)" class="input" />
+         <div class="edit-actions">
+           <button type="submit" class="btn btn-primary" data-testid="account-save"
+                   data-busy-label="Ukládám…">Uložit změny</button>
+           <button type="button" class="btn btn-ghost" data-action="cancel">Zrušit</button>
+         </div>
+       </form>`
+    : "";
+
+  return `
+    <li class="account" data-id="${escapeHtml(account.id)}" data-username="${name}" data-testid="account-row">
+      <div class="account-row">
+        <span class="account-name">${name}</span>
+        <span class="badge ${account.isAdmin ? "badge-admin" : ""}">${account.isAdmin ? "Admin" : "Host"}</span>
+        <button type="button" class="icon-btn edit" data-action="edit"
+                data-testid="account-edit" title="Upravit účet">${ICON_EDIT}</button>
+        ${deleteButton}
+      </div>
+      ${editForm}
+    </li>`;
+}
+
+function renderAccounts() {
+  if (state.accounts === null) {
+    el.list.innerHTML = '<li class="muted">Načítám…</li>';
+    return;
+  }
+  el.list.innerHTML = state.accounts.map(accountTemplate).join("");
+}
+
+/* ==========================================================
+   Akce: přihlášení / odhlášení
+   ========================================================== */
+el.loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(el.loginForm);
+  const username = normalizeUsername(data.get("username"));
+  const password = String(data.get("password") ?? "");
+
+  el.loginError.hidden = true;
+  setBusy(el.loginForm, true);
+  try {
+    await api.signIn(username, password);
+    el.loginForm.reset();
+    showApp();
+  } catch {
+    el.loginError.textContent = "Nesprávné uživatelské jméno nebo heslo.";
+    el.loginError.hidden = false;
+  } finally {
+    setBusy(el.loginForm, false);
+  }
+});
+
+el.logoutBtn.addEventListener("click", async () => {
+  await api.signOut();
+  clearMessages();
+  state.editingId = null;
+  showLogin();
+});
+
+/* ==========================================================
+   Akce: vytvoření hosta
+   ========================================================== */
+el.createForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(el.createForm);
+  const username = String(data.get("username") ?? "").trim();
+  const password = String(data.get("password") ?? "");
+
+  clearMessages();
+  setBusy(el.createForm, true);
+  try {
+    await api.createGuest(username, password);
+    el.createForm.reset();
+    showNotice(`Účet „${username.toLowerCase()}“ je vytvořený.`);
+  } catch (caught) {
+    showError(describeError(caught));
+  } finally {
+    setBusy(el.createForm, false);
+  }
+});
+
+/* ==========================================================
+   Akce: změna vlastního hesla
+   ========================================================== */
+el.passwordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(el.passwordForm);
+  const currentPassword = String(data.get("currentPassword") ?? "");
+  const newPassword = String(data.get("newPassword") ?? "");
+
+  clearMessages();
+  setBusy(el.passwordForm, true);
+  try {
+    await api.changeMyPassword(currentPassword, newPassword);
+    el.passwordForm.reset();
+    showNotice("Heslo je změněné.");
+  } catch (caught) {
+    showError(describeError(caught));
+  } finally {
+    setBusy(el.passwordForm, false);
+  }
+});
+
+/* ==========================================================
+   Akce v seznamu: upravit / zrušit / smazat / uložit změny
+   (event delegation – jeden posluchač pro celý seznam)
+   ========================================================== */
+el.list.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+
+  const item = button.closest("li[data-id]");
+  const id = item?.dataset.id;
+  const username = item?.dataset.username ?? "";
+
+  switch (button.dataset.action) {
+    case "edit":
+      clearMessages();
+      state.editingId = state.editingId === id ? null : id;
+      renderAccounts();
+      break;
+
+    case "cancel":
+      state.editingId = null;
+      renderAccounts();
+      break;
+
+    case "delete":
+      if (!window.confirm(`Smazat účet „${username}“? Uživatel se přestane moci přihlásit.`)) return;
+      clearMessages();
+      state.deletingId = id;
+      renderAccounts();
+      try {
+        await api.deleteAccount(id);
+        showNotice(`Účet „${username}“ byl smazán.`);
+      } catch (caught) {
+        showError(describeError(caught));
+      } finally {
+        state.deletingId = null;
+        renderAccounts();
+      }
+      break;
+  }
+});
+
+el.list.addEventListener("submit", async (event) => {
+  const form = event.target.closest('form[data-form="edit"]');
+  if (!form) return;
+  event.preventDefault();
+
+  const id = form.closest("li[data-id]").dataset.id;
+  const data = new FormData(form);
+  const username = String(data.get("username") ?? "").trim();
+  const password = String(data.get("password") ?? "");
+
+  // Rychlá kontrola ještě před odesláním (backend ji provede také).
+  if (username && !USERNAME_PATTERN.test(normalizeUsername(username))) {
+    return showError(describeError({ data: "USERNAME_INVALID" }));
+  }
+  if (password && password.length < MIN_PASSWORD_LENGTH) {
+    return showError(describeError({ data: "PASSWORD_TOO_SHORT" }));
+  }
+
+  clearMessages();
+  setBusy(form, true);
+  try {
+    await api.updateAccount(id, {
+      ...(username ? { username } : {}),
+      ...(password ? { password } : {}),
+    });
+    state.editingId = null;
+    renderAccounts();
+    showNotice("Změny jsou uložené.");
+  } catch (caught) {
+    showError(describeError(caught));
+    setBusy(form, false);
+  }
+});
+
+/* ==========================================================
+   Start aplikace
+   ========================================================== */
+function init() {
+  if (libraryError || !ConvexClient) {
+    el.loginView.hidden = false;
+    el.loginError.textContent =
+      "Nepodařilo se načíst knihovnu Convex z internetu (esm.sh). Zkontroluj připojení nebo blokování reklam a obnov stránku.";
+    el.loginError.hidden = false;
+    return;
+  }
+  if (CONVEX_URL.includes("TVOJE-NASAZENI")) {
+    el.loginView.hidden = false;
+    el.loginError.textContent = "Nejdřív vyplň CONVEX_URL v souboru js/config.js.";
+    el.loginError.hidden = false;
+    return;
+  }
+
+  api.initAuth();
+  if (api.hasSession()) showApp();
+  else showLogin();
+}
+
+init();
+
+</script>
+</body>
+</html>
